@@ -750,7 +750,7 @@ internal sealed class ModManager
 					new ModCards(package.Manifest, () => this.ContentManager!.Cards, () => this.ContentManager!.CardTraits),
 					new ModArtifacts(package.Manifest, () => this.ContentManager!.Artifacts),
 					new ModCharacters(package.Manifest, () => this.ContentManager!.Characters),
-					new ModShips(package.Manifest, () => this.ContentManager!.Ships, () => this.ContentManager!.Parts),
+					new ModShips(package.Manifest, () => this.ContentManager!.Ships, () => this.ContentManager!.Parts, () => this.ContentManager!.PartTraits),
 					new ModEnemies(package.Manifest, () => this.ContentManager!.Enemies)
 				),
 				new ModData(package.Manifest, this.ModDataHandler),
