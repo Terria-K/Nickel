@@ -15,6 +15,7 @@ internal sealed class ContentManager
 	public readonly ArtifactManager Artifacts;
 	public readonly CharacterManager Characters;
 	public readonly PartManager Parts;
+	public readonly PartTraitManager PartTraits;
 	public readonly ShipManager Ships;
 	public readonly CardTraitManager CardTraits;
 	public readonly EnemyManager Enemies;
@@ -28,6 +29,7 @@ internal sealed class ContentManager
 		ArtifactManager artifacts,
 		CharacterManager characters,
 		PartManager parts,
+		PartTraitManager partTraits,
 		ShipManager ships,
 		CardTraitManager cardTraits,
 		EnemyManager enemies
@@ -41,6 +43,7 @@ internal sealed class ContentManager
 		this.Artifacts = artifacts;
 		this.Characters = characters;
 		this.Parts = parts;
+		this.PartTraits = partTraits;
 		this.Ships = ships;
 		this.CardTraits = cardTraits;
 		this.Enemies = enemies;
@@ -64,10 +67,11 @@ internal sealed class ContentManager
 		var artifacts = new ArtifactManager(currentModLoadPhaseProvider, loggerProvider, vanillaModManifest);
 		var characters = new CharacterManager(currentModLoadPhaseProvider, loggerProvider, eventManager, sprites, audio, decks, statuses, cards, vanillaModManifest, modLoaderModManifest);
 		var parts = new PartManager(enumCasePool, currentModLoadPhaseProvider, vanillaModManifest);
+		var partTraits = new PartTraitManager(enumCasePool, currentModLoadPhaseProvider, vanillaModManifest);
 		var ships = new ShipManager(currentModLoadPhaseProvider, vanillaModManifest);
 		var cardTraits = new CardTraitManager(loggerProvider, vanillaModManifest, modLoaderModManifest, modDataHandler);
 		var enemies = new EnemyManager(currentModLoadPhaseProvider, loggerProvider, vanillaModManifest);
-		return new(sprites, audio, decks, statuses, cards, artifacts, characters, parts, ships, cardTraits, enemies);
+		return new(sprites, audio, decks, statuses, cards, artifacts, characters, parts, partTraits, ships, cardTraits, enemies);
 	}
 
 	internal void InjectQueuedEntries()
@@ -79,6 +83,7 @@ internal sealed class ContentManager
 		this.Artifacts.InjectQueuedEntries();
 		this.Characters.InjectQueuedEntries();
 		this.Parts.InjectQueuedEntries();
+		this.PartTraits.InjectQueuedEntries();
 		this.Ships.InjectQueuedEntries();
 		this.Enemies.InjectQueuedEntries();
 	}
@@ -91,6 +96,7 @@ internal sealed class ContentManager
 		this.Artifacts.InjectLocalizations(locale, localizations);
 		this.Characters.InjectLocalizations(locale, localizations);
 		this.Parts.InjectLocalizations(locale, localizations);
+		this.PartTraits.InjectLocalizations(locale, localizations);
 		this.Ships.InjectLocalizations(locale, localizations);
 		this.Enemies.InjectLocalizations(locale, localizations);
 	}
