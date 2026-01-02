@@ -34,6 +34,9 @@ internal sealed class ModShips(
 	public IShipEntry? LookupByUniqueName(string uniqueName)
 		=> shipManagerProvider().LookupByUniqueName(uniqueName);
 
+	public IPartTypeEntry? LookupPartTypeByUniqueName(string uniqueName)
+		=> partManagerProvider().LookupPartTypeByUniqueName(uniqueName);
+
 	public IPartDamageModifierEntry? LookupPartDamageModifierByUniqueName(string uniqueName)
 		=> partTraitManagerProvider().LookupPartDamageModifierByUniqueName(uniqueName);
 
