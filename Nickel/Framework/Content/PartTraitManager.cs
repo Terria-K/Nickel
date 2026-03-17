@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -16,13 +17,18 @@ internal sealed class PartTraitManager
 	private readonly Dictionary<string, PartStunModifierEntry> UniqueNameToPartStunModifierEntry = [];
 	private readonly Dictionary<PStunMod, PartStunModifierEntry> PartStunModifierToPartStunModifierEntry = [];
 	private readonly IModManifest VanillaModManifest;
+	private readonly Dictionary<string, PDamMod> VanillaPartDamageModifierTypes;
+	private readonly Dictionary<string, PStunMod> VanillaPartStunModifierTypes;
 
 	public PartTraitManager(EnumCasePool enumCasePool, Func<ModLoadPhaseState> currentModLoadPhaseProvider, IModManifest vanillaModManifest)
     {
-        this.PartDamangeModifierManager = new(currentModLoadPhaseProvider, Inject);
-		this.PartStunModifierManager = new(currentModLoadPhaseProvider, Inject);
+        this.PartDamangeModifierManager = new(currentModLoadPhaseProvider, this.Inject);
+		this.PartStunModifierManager = new(currentModLoadPhaseProvider, this.Inject);
 		this.EnumCasePool = enumCasePool;
 		this.VanillaModManifest = vanillaModManifest;
+
+		this.VanillaPartDamageModifierTypes = Enum.GetValues<PDamMod>().ToDictionary(v => Enum.GetName(v)!, v => v);
+		this.VanillaPartStunModifierTypes = Enum.GetValues<PStunMod>().ToDictionary(v => Enum.GetName(v)!, v => v);
 
 		ShipPatches.OnModifyDamageForDamageModifier += this.PartDamageModifierModifyDamage;
 		ShipPatches.OnPartsGetHit += this.PartStunModifierPartsGetHit;
@@ -174,59 +180,47 @@ internal sealed class PartTraitManager
 
 	public IPartDamageModifierEntry? LookupPartDamageModifierByUniqueName(string uniqueName)
     {
-        if (this.UniqueNameToPartDamageModifierEntry.TryGetValue(uniqueName, out var value))
+        if (this.UniqueNameToPartDamageModifierEntry.TryGetValue(uniqueName, out var entry))
         {
-			return value;
-        }
-		if (!Enum.TryParse<PDamMod>(uniqueName, out var pDamMod))
-        {
-            return null;
+			return entry;
         }
 
-		var vanillaEntry = this.CreateVanilla(pDamMod);
-		this.UniqueNameToPartDamageModifierEntry[vanillaEntry.UniqueName] = vanillaEntry;
-		this.PartDamageModifierToPartDamageModifierEntry[vanillaEntry.PartDamageModifier] = vanillaEntry;
-		return vanillaEntry;
+		if (this.VanillaPartDamageModifierTypes.TryGetValue(uniqueName, out var pDamMod))
+		{
+			entry = new PartDamageModifierEntry(this.VanillaModManifest, uniqueName, pDamMod, new()
+			{
+				Name = _ => Loc.T($"parttrait.{pDamMod}.name"),
+				Description = _ => Loc.T($"parttrait.{pDamMod}.desc")
+			});
+
+			this.UniqueNameToPartDamageModifierEntry[uniqueName] = entry;
+			this.PartDamageModifierToPartDamageModifierEntry[entry.PartDamageModifier] = entry;
+		}
+
+		return entry;
     }
 
 	public IPartStunModifierEntry? LookupPartStunModifierByUniqueName(string uniqueName)
     {
-        if (this.UniqueNameToPartStunModifierEntry.TryGetValue(uniqueName, out var value))
+        if (this.UniqueNameToPartStunModifierEntry.TryGetValue(uniqueName, out var entry))
         {
-			return value;
-        }
-		if (!Enum.TryParse<PStunMod>(uniqueName, out var pDamMod))
-        {
-            return null;
+			return entry;
         }
 
-		var vanillaEntry = this.CreateVanilla(pDamMod);
-		this.UniqueNameToPartStunModifierEntry[vanillaEntry.UniqueName] = vanillaEntry;
-		this.PartStunModifierToPartStunModifierEntry[vanillaEntry.PartStunModifier] = vanillaEntry;
-		return vanillaEntry;
+		if (this.VanillaPartStunModifierTypes.TryGetValue(uniqueName, out var pStunMod))
+		{
+			entry = new PartStunModifierEntry(this.VanillaModManifest, uniqueName, pStunMod, new()
+			{
+				Name = _ => Loc.T($"parttrait.{pStunMod}.name"),
+				Description = _ => Loc.T($"parttrait.{pStunMod}.desc")
+			});
+
+			this.UniqueNameToPartStunModifierEntry[uniqueName] = entry;
+			this.PartStunModifierToPartStunModifierEntry[entry.PartStunModifier] = entry;
+		}
+
+		return entry;
     }
-
-	private PartDamageModifierEntry CreateVanilla(PDamMod pDamMod) => new(
-		modOwner: this.VanillaModManifest,
-		uniqueName: Enum.GetName(pDamMod)!,
-		pDamMod: pDamMod,
-		new()
-        {
-            Name = _ => Loc.T($"parttrait.{pDamMod}.name"),
-			Description = _ => Loc.T($"parttrait.{pDamMod}.desc")
-        }
-	);
-
-	private PartStunModifierEntry CreateVanilla(PStunMod pStunMod) => new(
-		modOwner: this.VanillaModManifest,
-		uniqueName: Enum.GetName(pStunMod)!,
-		pStunMod: pStunMod,
-		new()
-        {
-            Name = _ => Loc.T($"parttrait.{pStunMod}.name"),
-			Description = _ => Loc.T($"parttrait.{pStunMod}.desc")
-        }
-	);
 
 	internal void InjectQueuedEntries()
 	{
